@@ -13,6 +13,8 @@ Simulates realistic ECU responses for standard OBD-II PIDs (Service 01) and deco
 - Live terminal output with configurable frame count and interval
 - Filter by specific PIDs via CLI flags
 - Pure Python — no external dependencies
+- Log decoded frames to CSV for offline analysis
+- Replay saved CAN logs through the decoder
 
 ---
 
@@ -36,6 +38,15 @@ python3 cli.py
 
 # Custom: 10 frames, fast interval, RPM and Speed only
 python3 cli.py --count 10 --interval 0.1 --pids 0x0C 0x0D
+
+# Save frames to CSV log
+python3 cli.py --count 20 --log can_log.csv
+
+# Replay a saved log
+python3 cli.py --replay can_log.csv
+
+# Replay with custom interval
+python3 cli.py --replay can_log.csv --interval 0.5
 ```
 
 ### Example Output
@@ -78,8 +89,8 @@ OBD-II (On-Board Diagnostics II) is the standard diagnostic protocol used in all
 ## Roadmap
 
 - [ ] Add J1939 PGN support (heavy trucks / commercial vehicles)
-- [ ] Log frames to CSV for offline analysis
-- [ ] Replay recorded CAN logs
+- [x]  Log frames to CSV for offline analysis
+- [x]  Replay recorded CAN logs
 - [ ] Add `python-can` backend for real hardware support
 
 ---
