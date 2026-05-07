@@ -10,6 +10,7 @@ import time
 from simulator import OBD2_PIDS, generate_obd2_response
 from decoder import decode, decode_all
 from logger import log_to_csv, replay_from_csv
+from j1939 import simulate_j1939, decode_j1939, PGN_MAP
 
 
 def print_header():
@@ -89,14 +90,38 @@ def main():
                         help="Save output to CSV file, e.g. --log can_log.csv")
     parser.add_argument("-r", "--replay",   type=str,   default=None,
                         help="Replay frames from a CSV log file, e.g. --replay can_log.csv")
+    parser.add_argument("--protocol", type=str, default="obd2", 
+                        choices=["obd2", "j1939"], 
+                        help="Protocol to simulate: obd2 (default) or j1939")
 
     args = parser.parse_args()
 
-    # Replay mode — skip simulation entirely
+    # --- REPLAY MODE ---
     if args.replay:
         run_replay(args.replay, args.interval)
         return
+    
+    # --- J1939 MODE ---   <-- ADD THE BLOCK HERE
+    if args.protocol == "j1939":
+        print("\nAvailable J1939 PGNs:")
+        for pgn, info in PGN_MAP.items():
+            print(f"  0x{pgn:04X}  {info['name']}")
+        frames = simulate_j1939(count=args.count, interval=args.interval)
+        print("\n" + "=" * 70)
+        print("       J1939 CAN Bus Simulator")
+        print("=" * 70)
+        for frame in frames:
+            decoded = decode_j1939(frame)
+            if decoded:
+                print(f"\n[{frame.timestamp % 1000:.3f}] PGN 0x{frame.pgn:04X} — {decoded['name']}")
+                for sig in decoded["signals"]:
+                    unit = f" {sig['unit']}" if sig["unit"] else ""
+                    print(f"    {sig['name']:<35} {sig['value']}{unit}")
+        print("\n" + "=" * 70)
+        print(f"Done. {len(frames)} J1939 frames generated.")
+        return
 
+    # --- OBD-II MODE (existing code) ---
     pids = args.pids if args.pids else list(OBD2_PIDS.keys())
 
     print("\nAvailable PIDs:")
@@ -105,6 +130,7 @@ def main():
         print(f"  0x{pid:02X}  {name}{marker}")
 
     run(count=args.count, interval=args.interval, pids=pids, log_file=args.log)
+
 
 
 if __name__ == "__main__":
