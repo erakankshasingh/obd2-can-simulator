@@ -1,4 +1,4 @@
-7"""
+"""
 Unit tests for the OBD-II decoder.
 Run with: pytest test_decoder.py -v
 """
