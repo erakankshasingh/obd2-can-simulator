@@ -93,6 +93,12 @@ def main():
     parser.add_argument("--protocol", type=str, default="obd2", 
                         choices=["obd2", "j1939"], 
                         help="Protocol to simulate: obd2 (default) or j1939")
+    parser.add_argument("--hardware",   action="store_true",
+                    help="Use python-can hardware backend instead of simulator")
+    parser.add_argument("--interface",  type=str, default="virtual",
+                    help="python-can interface type (default: virtual)")
+    parser.add_argument("--channel",    type=str, default="vcan0",
+                    help="CAN channel/device (default: vcan0)")
 
     args = parser.parse_args()
 
@@ -120,10 +126,25 @@ def main():
         print("\n" + "=" * 70)
         print(f"Done. {len(frames)} J1939 frames generated.")
         return
-
-    # --- OBD-II MODE (existing code) ---
+    
+    # Define pids early — needed by hardware and OBD-II modes
     pids = args.pids if args.pids else list(OBD2_PIDS.keys())
 
+    # --- HARDWARE BACKEND MODE ---
+    if args.hardware:
+        from can_backend import CANBackend
+        backend = CANBackend(interface=args.interface, channel=args.channel)
+        frames = backend.receive(count=args.count, interval=args.interval, pids=pids)
+        frames_decoded = decode_all(frames)
+        print_header()
+        for frame, decoded in frames_decoded:
+            print_row(frame, decoded)
+        backend.shutdown()
+        if args.log:
+            log_to_csv(frames_decoded, args.log)
+        return
+
+    # --- OBD-II MODE (existing code) ---
     print("\nAvailable PIDs:")
     for pid, name in OBD2_PIDS.items():
         marker = " <-- selected" if pid in pids else ""

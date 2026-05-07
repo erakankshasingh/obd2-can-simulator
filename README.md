@@ -17,6 +17,7 @@ Simulates realistic ECU responses for standard OBD-II PIDs (Service 01) and deco
 - Replay saved CAN logs through the decoder
 - 12 unit tests covering all PIDs, edge cases, and simulator integration
 - Pure Python — no external dependencies (pytest for tests only)
+- python-can hardware backend with graceful fallback (supports SocketCAN, PEAK PCAN, Vector, Kvaser)
 
 ---
 
@@ -61,6 +62,12 @@ python3 cli.py --protocol j1939 --count 20 --interval 0.05
 
 # Save J1939 session to CSV
 python3 cli.py --protocol j1939 --count 10 --log j1939_log.csv
+
+# Run with hardware backend (falls back to simulator if python-can not installed)
+python3 cli.py --hardware --count 10
+
+# Run with specific hardware interface
+python3 cli.py --hardware --interface socketcan --channel can0 --count 20
 ```
 
 ### Example Output
@@ -130,9 +137,9 @@ J1939 is the heavy-duty vehicle standard built on top of CAN, used in trucks, bu
 ## Roadmap
 
 - [x] Add J1939 PGN support (heavy trucks / commercial vehicles)
-- [x]  Log frames to CSV for offline analysis
-- [x]  Replay recorded CAN logs
-- [ ] Add `python-can` backend for real hardware support
+- [x] Log frames to CSV for offline analysis
+- [x] Replay recorded CAN logs
+- [x] Add `python-can` backend for real hardware support
 
 ---
 
